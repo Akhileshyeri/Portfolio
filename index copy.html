@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Reed | digital alchemist</title>
+  <!-- Fonts & basic styling -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #f5f3f0; 
+      font-family: 'Inter', sans-serif;
+      line-height: 1.5;
+      color: #1e1b1a;
+    }
+    #root { min-height: 100vh; display: flex; flex-direction: column; }
+  </style>
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <!-- Framer Motion (used by many ReactBits) -->
+  <script src="https://cdn.jsdelivr.net/npm/framer-motion@10.16.4/dist/framer-motion.js"></script>
+  <!-- Tailwind CSS via CDN (optional but helps ReactBits styling) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* custom smooth shadows & geometry */
+    .glass-panel { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.4); }
+    .text-balance { text-wrap: balance; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <!-- ReactBits (UMD) – we include the core + components we use -->
+  <script src="https://emilkowalski.github.io/react-bits/umd/react-bits.min.js"></script>
+  <!-- Alternatively use a known CDN – but we'll rely on window.ReactBits being available after this -->
+  <!-- Because the UMD might not be directly accessible, we'll create a local simulation of the components we need: 
+       SpotlightCard, SplashCursor, TextPressure, RollingGallery, Orb, TiltedScroll. 
+       But to keep it real, we define them as simple divs with effects or use the actual lib if loaded.
+       We'll assume ReactBits exports to window.ReactBits. If not, we fallback to elegant placeholders.
+  -->
+  <script>
+    // Ensure ReactBits namespace, fallback to dummy implementations that look modern
+    window.ReactBits = window.ReactBits || {};
+    
+    // utility to inject a simple canvas cursor effect (SplashCursor-like)
+    function initSplashCursor(canvas) {
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = window.innerWidth;
+      let h = canvas.height = window.innerHeight;
+      let particles = [];
+      let mouse = { x: 0, y: 0, moved: false };
+      
+      function onResize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', onResize);
+      
+      canvas.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        mouse.moved = true;
+        for (let i = 0; i < 3; i++) {
+          particles.push({
+            x: mouse.x + (Math.random()-0.5)*10,
+            y: mouse.y + (Math.random()-0.5)*10,
+            vx: (Math.random()-0.5)*2,
+            vy: (Math.random()-0.5)*2,
+            life: 1,
+            size: Math.random()*6 + 2
+          });
+        }
+      });
+      
+      function animate() {
+        ctx.clearRect(0, 0, w, h);
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = particles.length-1; i>=0; i--) {
+          let p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.01;
+          if (p.life <= 0 || p.x<0 || p.x>w || p.y<0 || p.y>h) {
+            particles.splice(i,1);
+            continue;
+          }
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(180, 130, 255, ${p.life*0.5})`;
+          ctx.fill();
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+    
+    // fallback components (simple but with modern styling)
+    if (!window.ReactBits.SplashCursor) {
+      window.ReactBits.SplashCursor = () => {
+        React.useEffect(() => {
+          const canvas = document.createElement('canvas');
+          canvas.style.position = 'fixed';
+          canvas.style.top = 0;
+          canvas.style.left = 0;
+          canvas.style.width = '100%';
+          canvas.style.height = '100%';
+          canvas.style.pointerEvents = 'none';
+          canvas.style.zIndex = 9999;
+          canvas.style.mixBlendMode = 'overlay';
+          document.body.appendChild(canvas);
+          initSplashCursor(canvas);
+          return () => canvas.remove();
+        }, []);
+        return null;
+      };
+    }
+    
+    if (!window.ReactBits.SpotlightCard) {
+      window.ReactBits.SpotlightCard = ({ children, className, spotlightColor }) => (
+        <div className={`relative overflow-hidden rounded-3xl bg-white/30 p-6 shadow-xl backdrop-blur-md transition-all hover:shadow-2xl ${className}`}
+          style={{ background: 'rgba(255,255,255,0.2)' }}>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity"></div>
+          {children}
+        </div>
+      );
+    }
+    
+    if (!window.ReactBits.TextPressure) {
+      window.ReactBits.TextPressure = ({ text, className, flex, width, height }) => (
+        <div className={`font-bold tracking-tight ${className}`} style={{ fontSize: 'clamp(3rem, 15vw, 8rem)', lineHeight: 0.9, textTransform: 'uppercase' }}>
+          {text}
+        </div>
+      );
+    }
+    
+    if (!window.ReactBits.RollingGallery) {
+      window.ReactBits.RollingGallery = ({ images, autoplay, pauseOnHover }) => (
+        <div className="flex overflow-x-auto space-x-4 py-4 [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
+          {images.map((src,i) => (
+            <img key={i} src={src} className="h-32 w-auto rounded-2xl object-cover shadow-md transition-transform hover:scale-105" alt="gallery" />
+          ))}
+        </div>
+      );
+    }
+    
+    if (!window.ReactBits.Orb) {
+      window.ReactBits.Orb = ({ glowIntensity, hoverIntensity, rotate, className }) => (
+        <div className={`relative mx-auto h-48 w-48 rounded-full bg-gradient-to-br from-purple-400/40 to-pink-400/40 blur-xl ${className}`} />
+      );
+    }
+    
+    if (!window.ReactBits.TiltedScroll) {
+      window.ReactBits.TiltedScroll = ({ children, className }) => (
+        <div className={`skew-y-3 transform space-y-3 rounded-3xl bg-white/50 p-6 shadow-lg backdrop-blur-sm ${className}`}>
+          {children}
+        </div>
+      );
+    }
+  </script>
+
+  <script type="text/jsx">
+    const { SplashCursor, SpotlightCard, TextPressure, RollingGallery, Orb, TiltedScroll } = window.ReactBits;
+
+    // Sample images for RollingGallery (placeholder images from unsplash)
+    const galleryImages = [
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&h=200&fit=crop&auto=format',
+      'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=200&h=200&fit=crop&auto=format',
+      'https://images.unsplash.com/photo-1617791160505-6f00504e3519?w=200&h=200&fit=crop&auto=format',
+      'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=200&h=200&fit=crop&auto=format',
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&h=200&fit=crop&auto=format',
+      'https://images.unsplash.com/photo-1545235617-7a424c1a60cc?w=200&h=200&fit=crop&auto=format',
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = React.useState('work');
+
+      return (
+        <div className="relative min-h-screen bg-[#f5f3f0] font-smooth antialiased">
+          {/* background cursor effect */}
+          <SplashCursor />
+
+          {/* main content – single page, detailed sections */}
+          <main className="relative z-10 mx-auto max-w-6xl px-4 py-12 md:py-20">
+            {/* hero */}
+            <section className="mb-24 text-center md:text-left">
+              <div className="flex flex-col items-center gap-8 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <span className="mb-2 inline-block rounded-full bg-black/5 px-4 py-1 text-sm font-medium text-stone-700 backdrop-blur-sm">
+                    ✦ digital alchemy
+                  </span>
+                  <TextPressure 
+                    text="NOVA REED"
+                    className="mt-2 text-7xl md:text-8xl lg:text-9xl"
+                    flex={true}
+                    width={true}
+                    height={true}
+                  />
+                  <p className="mt-4 max-w-2xl text-lg text-stone-600 text-balance">
+                    Creative technologist & interaction designer. I craft immersive digital experiences that blend minimal aesthetics with playful motion.
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  {['work', 'play', 'resume'].map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => setActiveTab(item)}
+                      className={`group relative rounded-full px-5 py-2 text-sm font-medium capitalize transition-all ${
+                        activeTab === item 
+                          ? 'bg-black text-white' 
+                          : 'bg-white/60 text-stone-700 backdrop-blur-sm hover:bg-white/80'
+                      }`}
+                    >
+                      {item}
+                      {activeTab === item && (
+                        <span className="absolute -bottom-1 left-1/2 h-0.5 w-2 -translate-x-1/2 rounded-full bg-black/50"></span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* dynamic content based on tab – but we show everything (single detailed page), just highlight active */}
+            <section className="mb-24">
+              <SpotlightCard className="p-8 md:p-12" spotlightColor="rgba(180, 130, 255, 0.2)">
+                <h2 className="mb-4 text-3xl font-light tracking-tight md:text-4xl">
+                  {activeTab === 'work' && 'selected creations'}
+                  {activeTab === 'play' && 'experimental playground'}
+                  {activeTab === 'resume' && 'trajectory & tools'}
+                </h2>
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                  {/* work items (always visible, but order may shift) */}
+                  <div className={`transition-opacity duration-300 ${activeTab !== 'work' ? 'opacity-40 md:opacity-60' : ''}`}>
+                    <div className="aspect-video w-full rounded-2xl bg-gradient-to-br from-indigo-100 to-sky-100 p-1">
+                      <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?w=400&h=300&fit=crop&auto=format" alt="project" className="h-full w-full rounded-xl object-cover" />
+                    </div>
+                    <h3 className="mt-3 text-xl font-medium">Orbit — AR filter suite</h3>
+                    <p className="text-sm text-stone-500">2024 · interactive</p>
+                  </div>
+                  <div className={`transition-opacity duration-300 ${activeTab !== 'work' ? 'opacity-40 md:opacity-60' : ''}`}>
+                    <div className="aspect-video w-full rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 p-1">
+                      <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=300&fit=crop&auto=format" alt="project" className="h-full w-full rounded-xl object-cover" />
+                    </div>
+                    <h3 className="mt-3 text-xl font-medium">Nebula visualiser</h3>
+                    <p className="text-sm text-stone-500">2023 · webGL</p>
+                  </div>
+                  <div className={`transition-opacity duration-300 ${activeTab !== 'work' ? 'opacity-40 md:opacity-60' : ''}`}>
+                    <div className="aspect-video w-full rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 p-1">
+                      <img src="https://images.unsplash.com/photo-1617791160505-6f00504e3519?w=400&h=300&fit=crop&auto=format" alt="project" className="h-full w-full rounded-xl object-cover" />
+                    </div>
+                    <h3 className="mt-3 text-xl font-medium">Fluid layouts — tool</h3>
+                    <p className="text-sm text-stone-500">2024 · react</p>
+                  </div>
+                  {/* extra items to fill grid, but they are part of the detailed view */}
+                </div>
+                {/* see more link */}
+                <div className="mt-6 text-right">
+                  <a href="#" className="inline-flex items-center gap-1 text-sm font-medium text-black underline-offset-4 hover:underline">
+                    view full archive → 
+                  </a>
+                </div>
+              </SpotlightCard>
+            </section>
+
+            {/* gallery strip – RollingGallery from reactbits */}
+            <section className="mb-24">
+              <h2 className="mb-2 text-2xl font-light tracking-tight">recent visual scraps</h2>
+              <RollingGallery 
+                images={galleryImages}
+                autoplay={true}
+                pauseOnHover={true}
+              />
+            </section>
+
+            {/* Orb + TiltedScroll (skills / about) */}
+            <section className="mb-24 grid gap-8 md:grid-cols-2">
+              <div className="relative flex items-center justify-center rounded-3xl bg-white/30 p-8 backdrop-blur-sm">
+                <Orb 
+                  glowIntensity={0.6} 
+                  hoverIntensity={0.8} 
+                  rotate={10}
+                  className="h-56 w-56"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-4xl font-black text-white mix-blend-overlay drop-shadow-lg">✦</span>
+                </div>
+              </div>
+              <TiltedScroll className="space-y-4">
+                <h3 className="text-2xl font-medium">stacks & vibes</h3>
+                <ul className="space-y-2 text-stone-700">
+                  <li className="flex gap-2"><span className="w-16 text-sm font-semibold">frontend</span> <span>React, TS, Tailwind, Framer</span></li>
+                  <li className="flex gap-2"><span className="w-16 text-sm font-semibold">creative</span> <span>Three.js, GLSL, TouchDesigner</span></li>
+                  <li className="flex gap-2"><span className="w-16 text-sm font-semibold">tools</span> <span>Figma, Spline, Blender</span></li>
+                  <li className="flex gap-2"><span className="w-16 text-sm font-semibold">vibes</span> <span>minimal, brutalism, retro-future</span></li>
+                </ul>
+                <div className="flex flex-wrap gap-2 pt-4">
+                  {['design', 'code', 'motion', 'sound'].map(s => (
+                    <span key={s} className="rounded-full bg-black/5 px-3 py-1 text-xs uppercase tracking-wider">#{s}</span>
+                  ))}
+                </div>
+              </TiltedScroll>
+            </section>
+
+            {/* detailed text / resume part (always visible, long form) */}
+            <section className="mb-16 grid gap-10 md:grid-cols-3">
+              <div className="col-span-2 space-y-6">
+                <h2 className="text-2xl font-light">about the practice</h2>
+                <p className="text-stone-700">
+                  With a background in digital sculpture and generative systems, I build interfaces that feel alive. 
+                  I've collaborated with studios like <span className="font-medium">Field.io</span>, <span className="font-medium">Active Theory</span>, 
+                  and independent artists to bring experimental concepts to web and installation.
+                </p>
+                <p className="text-stone-700">
+                  Currently exploring the intersection of AI and realtime graphics. I also teach a workshop on "atmospheric coding" at 
+                  Sandberg Institute.
+                </p>
+                <div className="h-24 w-full rounded-2xl bg-gradient-to-r from-purple-200/30 to-pink-200/30"></div>
+              </div>
+              <div className="space-y-4 rounded-2xl bg-white/20 p-6 backdrop-blur-sm">
+                <h3 className="text-lg font-medium">selected clients</h3>
+                <ul className="space-y-2 text-sm text-stone-600">
+                  <li>Nike (digital installation)</li>
+                  <li>Google Arts & Culture</li>
+                  <li>SONOS Studio</li>
+                  <li>offf festival</li>
+                </ul>
+                <div className="pt-4">
+                  <a href="#" className="text-sm font-medium underline decoration-stone-400 underline-offset-4">download full CV (pdf) →</a>
+                </div>
+              </div>
+            </section>
+
+            {/* contact footer */}
+            <footer className="border-t border-black/10 pt-8 text-sm text-stone-500">
+              <div className="flex flex-wrap justify-between gap-4">
+                <span>© 2025 Nova Reed – digital alchemist</span>
+                <div className="flex gap-6">
+                  <a href="#" className="hover:text-black">ig</a>
+                  <a href="#" className="hover:text-black">tw</a>
+                  <a href="#" className="hover:text-black">li</a>
+                  <a href="#" className="hover:text-black">mail</a>
+                </div>
+              </div>
+            </footer>
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
