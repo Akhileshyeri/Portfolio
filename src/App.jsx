@@ -1,6 +1,6 @@
 // App.js
 import React, { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { Box } from "@mui/material";
@@ -35,6 +35,17 @@ const Home = () => {
 const AppContent = () => {
   const { mode } = useThemeMode();
   const theme = getTheme(mode);
+  const location = useLocation();
+
+  useEffect(() => {
+    // Temporarily turn off smooth scrolling for instant jump
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, 0);
+    // Restore smooth scrolling for anchor links
+    setTimeout(() => {
+      document.documentElement.style.scrollBehavior = "smooth";
+    }, 50);
+  }, [location.pathname]);
 
   useEffect(() => {
     document.documentElement.style.scrollBehavior = "smooth";

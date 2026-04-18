@@ -13,12 +13,14 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import LaunchIcon from '@mui/icons-material/Launch';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useNavigate } from 'react-router-dom';
+import examAppMockup from '../assets/exam_app_mockup.png';
+import erpsImg from '../assets/Erps.png';
+import schoolErpImg from '../assets/SchoolERP.png';
 
 // Styled Components
 const ProjectCard = styled(Card)(({ theme }) => ({
@@ -44,10 +46,13 @@ const ProjectCard = styled(Card)(({ theme }) => ({
 }));
 
 const StyledCardMedia = styled(CardMedia)(({ theme }) => ({
-  height: 220,
+  height: 260,
   position: 'relative',
+  backgroundSize: 'contain',
+  backgroundPosition: 'center',
+  backgroundColor: '#FFFFFF', // Set all containers to unified white
   [theme.breakpoints.down('sm')]: {
-    height: 180, // Slightly shorter images on mobile
+    height: 200, // Slightly shorter images on mobile
   },
 }));
 
@@ -69,43 +74,43 @@ const projects = [
   {
     title: 'Exam App',
     description: 'Advanced online examination platform with real-time test monitoring, OMR support, and performance analytics.',
-    image: 'https://via.placeholder.com/600x400/2D3047/FFFFFF?text=Exam+App',
-    tech: ['React', 'Firebase', 'MUI'],
+    image: examAppMockup,
+    tech: ['React Native', 'Firebase', 'MUI'],
     demo: '/exam-app',
     code: '#'
   },
   {
     title: 'Question Bank',
     description: 'Dynamic system to manage and generate exam papers with filters, templates, and LaTeX support.',
-    image: 'https://via.placeholder.com/600x400/E0A458/FFFFFF?text=Question+Bank',
-    tech: ['React', 'Node.js', 'MySQL'],
+    image: erpsImg,
+    tech: ['React.js', 'Bootstrap'],
     demo: '/question-bank',
     code: '#'
   },
   {
     title: 'School ERP',
     description: 'Complete institutional management system covering student records, fee management, and staff payroll.',
-    image: 'https://via.placeholder.com/600x400/34a853/FFFFFF?text=School+ERP',
-    tech: ['React', 'Node.js', 'PostgreSQL'],
+    image: schoolErpImg,
+    tech: ['React.js', 'TailwindCSS',],
     demo: '/erp',
     code: '#'
   },
-  {
-    title: 'POP Kissan',
-    description: 'Complete institutional management system covering student records, fee management, and staff payroll.',
-    image: 'https://via.placeholder.com/600x400/34a853/FFFFFF?text=School+ERP',
-    tech: ['React', 'Node.js', 'PostgreSQL'],
-    demo: '/erp',
-    code: '#'
-  },
-  {
-    title: 'widely-app',
-    description: 'Complete institutional management system covering student records, fee management, and staff payroll.',
-    image: 'https://via.placeholder.com/600x400/34a853/FFFFFF?text=School+ERP',
-    tech: ['React', 'Node.js', 'PostgreSQL'],
-    demo: '/erp',
-    code: '#'
-  }
+  // {
+  //   title: 'POP Kissan',
+  //   description: 'Complete institutional management system covering student records, fee management, and staff payroll.',
+  //   image: 'https://via.placeholder.com/600x400/34a853/FFFFFF?text=School+ERP',
+  //   tech: ['React', 'Node.js', 'PostgreSQL'],
+  //   demo: '/erp',
+  //   code: '#'
+  // },
+  // {
+  //   title: 'widely-app',
+  //   description: 'Complete institutional management system covering student records, fee management, and staff payroll.',
+  //   image: 'https://via.placeholder.com/600x400/34a853/FFFFFF?text=School+ERP',
+  //   tech: ['React', 'Node.js', 'PostgreSQL'],
+  //   demo: '/erp',
+  //   code: '#'
+  // }
 ];
 
 function LatestWorks() {
@@ -211,7 +216,7 @@ function LatestWorks() {
                       ))}
                     </Box>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 'auto' }}>
                       <Button
                         variant="contained"
                         size="medium"
@@ -223,17 +228,6 @@ function LatestWorks() {
                       >
                         Live Demo
                       </Button>
-                      <IconButton
-                        size="medium"
-                        href={project.code}
-                        target="_blank"
-                        sx={{
-                          border: `1px solid ${theme.palette.divider}`,
-                          borderRadius: '10px'
-                        }}
-                      >
-                        <GitHubIcon fontSize="small" />
-                      </IconButton>
                     </Box>
                   </CardContent>
                 </ProjectCard>
